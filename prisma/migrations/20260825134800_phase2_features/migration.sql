@@ -1,176 +1,75 @@
--- DropForeignKey
-ALTER TABLE `_rolepermissions` DROP FOREIGN KEY `_RolePermissions_A_fkey`;
+-- DropForeignKey (only FKs that may still exist - use conditional approach)
+-- TeamRelationship FKs (table still exists)
+ALTER TABLE `TeamRelationship` DROP FOREIGN KEY IF EXISTS `TeamRelationship_childAssociateId_fkey`;
+ALTER TABLE `TeamRelationship` DROP FOREIGN KEY IF EXISTS `TeamRelationship_parentAssociateId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `_rolepermissions` DROP FOREIGN KEY `_RolePermissions_B_fkey`;
+-- TeamRequest FKs
+ALTER TABLE `TeamRequest` DROP FOREIGN KEY IF EXISTS `TeamRequest_proposedParentId_fkey`;
+ALTER TABLE `TeamRequest` DROP FOREIGN KEY IF EXISTS `TeamRequest_requesterId_fkey`;
+ALTER TABLE `TeamRequest` DROP FOREIGN KEY IF EXISTS `TeamRequest_targetAssociateId_fkey`;
+ALTER TABLE `TeamRequest` DROP FOREIGN KEY IF EXISTS `TeamRequest_targetUserId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `booking` DROP FOREIGN KEY `Booking_inventoryUnitId_fkey`;
+-- TravelRequest FKs
+ALTER TABLE `TravelRequest` DROP FOREIGN KEY IF EXISTS `TravelRequest_projectId_fkey`;
+ALTER TABLE `TravelRequest` DROP FOREIGN KEY IF EXISTS `TravelRequest_requesterId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `booking` DROP FOREIGN KEY `Booking_projectId_fkey`;
+-- User FKs
+ALTER TABLE `User` DROP FOREIGN KEY IF EXISTS `User_parentId_fkey`;
+ALTER TABLE `User` DROP FOREIGN KEY IF EXISTS `User_roleId_fkey`;
+ALTER TABLE `User` DROP FOREIGN KEY IF EXISTS `User_teamId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `booking` DROP FOREIGN KEY `Booking_userId_fkey`;
+-- ReviewRequest FKs (table still exists)
+ALTER TABLE `ReviewRequest` DROP FOREIGN KEY IF EXISTS `ReviewRequest_bookingId_fkey`;
+ALTER TABLE `ReviewRequest` DROP FOREIGN KEY IF EXISTS `ReviewRequest_projectId_fkey`;
+ALTER TABLE `ReviewRequest` DROP FOREIGN KEY IF EXISTS `ReviewRequest_userId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `carouselitem` DROP FOREIGN KEY `CarouselItem_projectId_fkey`;
+-- Review FKs
+ALTER TABLE `Review` DROP FOREIGN KEY IF EXISTS `Review_reviewRequestId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `commissionpolicy` DROP FOREIGN KEY `CommissionPolicy_projectId_fkey`;
+-- SiteVisit FKs
+ALTER TABLE `SiteVisit` DROP FOREIGN KEY IF EXISTS `SiteVisit_projectId_fkey`;
+ALTER TABLE `SiteVisit` DROP FOREIGN KEY IF EXISTS `SiteVisit_userId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `commissionpolicy` DROP FOREIGN KEY `CommissionPolicy_userId_fkey`;
+-- ProjectLayout FKs
+ALTER TABLE `ProjectLayout` DROP FOREIGN KEY IF EXISTS `ProjectLayout_projectId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `commissiontransaction` DROP FOREIGN KEY `CommissionTransaction_bookingId_fkey`;
+-- ProjectMedia FKs
+ALTER TABLE `ProjectMedia` DROP FOREIGN KEY IF EXISTS `ProjectMedia_projectId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `commissiontransaction` DROP FOREIGN KEY `CommissionTransaction_projectId_fkey`;
+-- PromotionalPopup FKs
+ALTER TABLE `PromotionalPopup` DROP FOREIGN KEY IF EXISTS `PromotionalPopup_projectId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `commissiontransaction` DROP FOREIGN KEY `CommissionTransaction_userId_fkey`;
+-- TutorialStep FKs
+ALTER TABLE `TutorialStep` DROP FOREIGN KEY IF EXISTS `TutorialStep_tutorialId_fkey`;
 
--- DropForeignKey
-ALTER TABLE `inventoryunit` DROP FOREIGN KEY `InventoryUnit_projectId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `layoutelement` DROP FOREIGN KEY `LayoutElement_inventoryUnitId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `layoutelement` DROP FOREIGN KEY `LayoutElement_layoutId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `notification` DROP FOREIGN KEY `Notification_userId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `offer` DROP FOREIGN KEY `Offer_projectId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `projectlayout` DROP FOREIGN KEY `ProjectLayout_projectId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `projectmedia` DROP FOREIGN KEY `ProjectMedia_projectId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `promotionalpopup` DROP FOREIGN KEY `PromotionalPopup_projectId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `review` DROP FOREIGN KEY `Review_reviewRequestId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `reviewrequest` DROP FOREIGN KEY `ReviewRequest_bookingId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `reviewrequest` DROP FOREIGN KEY `ReviewRequest_projectId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `reviewrequest` DROP FOREIGN KEY `ReviewRequest_userId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `sitevisit` DROP FOREIGN KEY `SiteVisit_projectId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `sitevisit` DROP FOREIGN KEY `SiteVisit_userId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `teamrequest` DROP FOREIGN KEY `TeamRequest_proposedParentId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `teamrequest` DROP FOREIGN KEY `TeamRequest_requesterId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `teamrequest` DROP FOREIGN KEY `TeamRequest_targetAssociateId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `teamrequest` DROP FOREIGN KEY `TeamRequest_targetUserId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `tutorialstep` DROP FOREIGN KEY `TutorialStep_tutorialId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `user` DROP FOREIGN KEY `User_parentId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `user` DROP FOREIGN KEY `User_roleId_fkey`;
-
--- DropForeignKey
-ALTER TABLE `user` DROP FOREIGN KEY `User_teamId_fkey`;
-
--- DropTable
-DROP TABLE `_rolepermissions`;
-
--- DropTable
-DROP TABLE `auditlog`;
-
--- DropTable
-DROP TABLE `booking`;
-
--- DropTable
-DROP TABLE `carouselitem`;
-
--- DropTable
-DROP TABLE `commissionpolicy`;
-
--- DropTable
-DROP TABLE `commissiontransaction`;
-
--- DropTable
-DROP TABLE `faq`;
-
--- DropTable
-DROP TABLE `inventoryunit`;
-
--- DropTable
-DROP TABLE `layoutelement`;
-
--- DropTable
-DROP TABLE `notification`;
-
--- DropTable
-DROP TABLE `offer`;
-
--- DropTable
-DROP TABLE `permission`;
-
--- DropTable
-DROP TABLE `project`;
-
--- DropTable
-DROP TABLE `projectlayout`;
-
--- DropTable
-DROP TABLE `projectmedia`;
-
--- DropTable
-DROP TABLE `promotionalpopup`;
-
--- DropTable
-DROP TABLE `review`;
-
--- DropTable
-DROP TABLE `reviewrequest`;
-
--- DropTable
-DROP TABLE `role`;
-
--- DropTable
-DROP TABLE `sitevisit`;
-
--- DropTable
-DROP TABLE `team`;
-
--- DropTable
-DROP TABLE `teamrequest`;
-
--- DropTable
-DROP TABLE `tutorial`;
-
--- DropTable
-DROP TABLE `tutorialstep`;
-
--- DropTable
-DROP TABLE `user`;
+-- DropTable (use IF EXISTS for idempotency)
+DROP TABLE IF EXISTS `_RolePermissions`;
+DROP TABLE IF EXISTS `AuditLog`;
+DROP TABLE IF EXISTS `Booking`;
+DROP TABLE IF EXISTS `CarouselItem`;
+DROP TABLE IF EXISTS `CommissionPolicy`;
+DROP TABLE IF EXISTS `CommissionTransaction`;
+DROP TABLE IF EXISTS `Faq`;
+DROP TABLE IF EXISTS `InventoryUnit`;
+DROP TABLE IF EXISTS `LayoutElement`;
+DROP TABLE IF EXISTS `Notification`;
+DROP TABLE IF EXISTS `Offer`;
+DROP TABLE IF EXISTS `Permission`;
+DROP TABLE IF EXISTS `ProjectLayout`;
+DROP TABLE IF EXISTS `ProjectMedia`;
+DROP TABLE IF EXISTS `PromotionalPopup`;
+DROP TABLE IF EXISTS `Review`;
+DROP TABLE IF EXISTS `ReviewRequest`;
+DROP TABLE IF EXISTS `Role`;
+DROP TABLE IF EXISTS `SiteVisit`;
+DROP TABLE IF EXISTS `TeamRelationship`;
+DROP TABLE IF EXISTS `TeamRequest`;
+DROP TABLE IF EXISTS `TravelRequest`;
+DROP TABLE IF EXISTS `TutorialStep`;
+DROP TABLE IF EXISTS `Tutorial`;
+DROP TABLE IF EXISTS `team`;
+DROP TABLE IF EXISTS `Project`;
+DROP TABLE IF EXISTS `User`;
 
 -- CreateTable
 CREATE TABLE `User` (
@@ -784,4 +683,3 @@ ALTER TABLE `_RolePermissions` ADD CONSTRAINT `_RolePermissions_A_fkey` FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE `_RolePermissions` ADD CONSTRAINT `_RolePermissions_B_fkey` FOREIGN KEY (`B`) REFERENCES `Role`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-

@@ -26,6 +26,7 @@ export const login = async (req: Request, res: Response) => {
 
     return res.status(200).json({ success: true, user: result.user });
   } catch (error: any) {
+    console.error('[LOGIN ERROR]', error);
     if (error.name === 'ZodError') {
       return res.status(400).json({ success: false, message: 'Invalid input', errors: error.errors });
     }
@@ -68,10 +69,10 @@ export const changeInitialPassword = async (req: AuthenticatedRequest, res: Resp
     }
 
     const validatedData = changePasswordSchema.parse(req.body);
-    
+
     const result = await authService.changeInitialPassword(
-      req.user.id, 
-      validatedData.currentPassword, 
+      req.user.id,
+      validatedData.currentPassword,
       validatedData.newPassword
     );
 
