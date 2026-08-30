@@ -100,31 +100,25 @@ export const toggleFeaturedStatus = async (req: AuthenticatedRequest, res: Respo
   }
 };
 
-export const deleteProject = async (req: AuthenticatedRequest, res: Response) => {
+export const updateProjectStatus = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const { status } = req.body;
     
     const role = req.user!.role;
     if (role !== 'MD' && role !== 'CHANNEL_PARTNER_MANAGER') {
-      return res.status(403).json({ success: false, message: 'Forbidden: Only management can delete projects' });
+      return res.status(403).json({ success: false, message: 'Forbidden: Only management can update project status' });
     }
 
-    await ProjectService.safeDeleteProject(id);
-    return res.status(200).json({ success: true, message: 'Project deleted successfully' });
-  } catch (error: any) {
-    console.error('Error deleting project:', error);
-    return res.status(500).json({ success: false, message: 'Server error' });
-  }
-};
+    if (status !== 'ACTIVE' && status !== 'INACTIVE') {
+      return res.status(400).json({ success: false, message: 'Invalid status. Must be ACTIVE or INACTIVE.' });
+    }
 
-export const archiveProject = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { id } = req.params as { id: string };
-    const project = await ProjectService.archiveProject(id);
-    return res.status(200).json({ success: true, data: project });
+    const project = await ProjectService.updateProjectStatus(id, status);
+    return res.status(200).json({ success: true, message: `Project status updated to ${status}`, data: project });
   } catch (error: any) {
-    console.error('Error archiving project:', error);
-    return res.status(400).json({ success: false, message: 'Server error' });
+    console.error('Error updating project status:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
 

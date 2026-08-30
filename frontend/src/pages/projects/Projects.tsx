@@ -21,17 +21,25 @@ interface Project {
   inventory?: any[];
 }
 
+import ConfirmModal from '../../components/common/ConfirmModal';
+
 const Projects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Status toggle state
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  
+
   const searchParams = new URLSearchParams(location.search);
   const filterParam = searchParams.get('filter');
-  
+
   const isManager = user?.role === 'MD' || user?.role === 'CHANNEL_PARTNER_MANAGER';
 
   useEffect(() => {
@@ -49,17 +57,48 @@ const Projects: React.FC = () => {
     }
   };
 
+  const handleStatusToggle = async () => {
+    if (!selectedProject) return;
+    const newStatus = selectedProject.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    try {
+      await api.patch(`/projects/${selectedProject.id}/status`, { status: newStatus });
+      fetchProjects();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to update status');
+    } finally {
+      setStatusModalOpen(false);
+      setSelectedProject(null);
+    }
+  };
+
   const filteredProjects = projects.filter(p => {
     if (filterParam === 'hot' && !p.isHot) return false;
     if (filterParam === 'featured' && !p.isFeatured) return false;
+    if (statusFilter !== 'ALL' && p.status !== statusFilter) return false;
     const s = search.toLowerCase();
-    return p.name.toLowerCase().includes(s) || 
+    return p.name.toLowerCase().includes(s) ||
            p.code.toLowerCase().includes(s) ||
            (p.location && p.location.toLowerCase().includes(s));
   });
 
   return (
     <div className="space-y-6">
+      <ConfirmModal
+        isOpen={statusModalOpen}
+        title={selectedProject?.status === 'ACTIVE' ? 'Deactivate Project' : 'Activate Project'}
+        message={
+          selectedProject?.status === 'ACTIVE'
+            ? "Are you sure you want to deactivate this project?\nThe project will no longer be visible to users."
+            : "Are you sure you want to activate this project?\nThe project will become visible to users again."
+        }
+        onConfirm={handleStatusToggle}
+        onCancel={() => {
+          setStatusModalOpen(false);
+          setSelectedProject(null);
+        }}
+        confirmText="OK"
+        cancelText="Cancel"
+      />
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-deep-navy uppercase tracking-wide">
@@ -67,7 +106,7 @@ const Projects: React.FC = () => {
           </h1>
           <p className="text-sm text-gray-500 font-medium">Manage and view property projects.</p>
         </div>
-        
+
         {isManager && (
           <Button
             onClick={() => navigate('/projects/create')}
@@ -78,16 +117,32 @@ const Projects: React.FC = () => {
         )}
       </div>
 
-      <Card padding="sm" className="flex items-center gap-3 focus-within:ring-2 focus-within:ring-action-blue/20 focus-within:border-action-blue transition-all">
-        <Search className="text-gray-400" size={20} />
-        <input
-          type="text"
-          placeholder="Search projects..."
-          className="flex-1 outline-none text-sm text-primary-text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Card padding="sm" className="flex-1 flex items-center gap-3 focus-within:ring-2 focus-within:ring-action-blue/20 focus-within:border-action-blue transition-all">
+          <Search className="text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Search projects..."
+            className="flex-1 outline-none text-sm text-primary-text bg-transparent"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </Card>
+
+        {isManager && (
+          <select
+            className="px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm font-medium outline-none text-primary-navy"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="ALL">All Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="DRAFT">Draft</option>
+            <option value="PENDING_APPROVAL">Pending Approval</option>
+          </select>
+        )}
+      </div>
 
       {loading ? (
         <div className="flex justify-center p-8">
@@ -96,27 +151,27 @@ const Projects: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
-            <div 
-              key={project.id} 
+            <div
+              key={project.id}
               onClick={() => navigate(`/projects/${project.id}`)}
               className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 group flex flex-col cursor-pointer hover:-translate-y-1"
             >
               <div className="h-56 bg-gray-100 relative overflow-hidden">
                 {project.media && project.media.length > 0 ? (
-                  <img 
-                    src={getStaticUrl(project.media[0].url)} 
+                  <img
+                    src={getStaticUrl(project.media[0].url)}
                     alt={project.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300 bg-gray-100">
                     <Building2 size={56} />
                   </div>
                 )}
-                
+
                 {/* Overlay Gradient */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
+
                 <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
                   {project.isHot && (
                     <span className="bg-gradient-to-r from-red-600 to-rose-500 text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-lg shadow-red-500/30 flex items-center gap-1.5 uppercase tracking-widest animate-pulse">
@@ -135,7 +190,7 @@ const Projects: React.FC = () => {
                     {project.code}
                   </span>
                 </div>
-                
+
                 {project.verificationStatus === 'VERIFIED' && (
                   <div className="absolute bottom-4 left-4">
                     <span className="bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-[10px] font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-1 uppercase tracking-wider">
@@ -144,29 +199,59 @@ const Projects: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               <div className="p-6 flex flex-col flex-1 relative bg-white">
                 <h3 className="text-xl font-black text-deep-navy mb-2 line-clamp-1 group-hover:text-action-blue transition-colors">{project.name}</h3>
-                
+
                 <div className="flex items-center text-sm text-gray-500 mb-6 gap-2">
-                  <MapPin size={16} className="text-gray-400" /> 
+                  <MapPin size={16} className="text-gray-400" />
                   <span className="line-clamp-1 font-medium">{project.location}</span>
                 </div>
-                
-                <div className="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <Badge variant={
-                      project.status === 'ACTIVE' ? 'success' :
-                      project.status === 'DRAFT' ? 'neutral' :
-                      project.status === 'PENDING_APPROVAL' ? 'warning' :
-                      'danger'
-                    }>
-                      {project.status.replace('_', ' ')}
-                    </Badge>
+
+                <div className="mt-auto pt-5 border-t border-gray-100 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <Badge variant={
+                        project.status === 'ACTIVE' ? 'success' :
+                        project.status === 'DRAFT' ? 'neutral' :
+                        project.status === 'PENDING_APPROVAL' ? 'warning' :
+                        'danger'
+                      }>
+                        {project.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-action-blue group-hover:bg-action-blue group-hover:text-white transition-colors duration-300">
+                      <ArrowRight size={20} />
+                    </div>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-action-blue group-hover:bg-action-blue group-hover:text-white transition-colors duration-300">
-                    <ArrowRight size={20} />
-                  </div>
+
+                  {isManager && (
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-gray-50">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="flex-1 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/projects/${project.id}/edit`);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant={project.status === 'ACTIVE' ? 'danger' : 'success'}
+                        className="flex-1 text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProject(project);
+                          setStatusModalOpen(true);
+                        }}
+                      >
+                        {project.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

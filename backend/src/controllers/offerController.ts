@@ -102,7 +102,7 @@ export const updateOffer = async (req: AuthenticatedRequest, res: Response) => {
 export const deleteOffer = async (req: AuthenticatedRequest, res: Response) => {
   try {
     await OfferService.delete(req.params.id as string, req.user!.id);
-    return res.status(200).json({ success: true, message: 'Archived successfully' });
+    return res.status(200).json({ success: true, message: 'Offer deleted successfully' });
   } catch (error: any) {
     console.error('Error deleting offer:', error);
     if (error.message === 'Offer not found') return res.status(404).json({ success: false, message: error.message });

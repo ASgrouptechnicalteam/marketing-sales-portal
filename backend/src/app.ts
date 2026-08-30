@@ -22,6 +22,7 @@ import publicReviewRoutes from './routes/publicReviewRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import faqRoutes from './routes/faqRoutes';
 import tutorialRoutes from './routes/tutorialRoutes';
+
 const app = express();
 
 // Security Headers
@@ -71,6 +72,7 @@ app.use('/api/v1/public/reviews', publicReviewRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/faqs', faqRoutes);
 app.use('/api/v1/tutorials', tutorialRoutes);
+
 
 
 // Serve uploaded files (bill documents, project media)

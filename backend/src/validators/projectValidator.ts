@@ -9,7 +9,19 @@ export const validateCreateProject = (req: Request, res: Response, next: NextFun
 };
 
 export const validateUpdateProject = (req: Request, res: Response, next: NextFunction) => {
-  // Add more specific validations if needed
+  // Prevent updating system or status fields through the edit form
+  const forbiddenFields = [
+    'id', 'status', 'verificationStatus', 'createdBy', 'approvedBy',
+    'approvedAt', 'rejectionReason', 'createdAt', 'updatedAt'
+  ];
+
+  if (req.body) {
+    for (const field of forbiddenFields) {
+      if (field in req.body) {
+        delete req.body[field];
+      }
+    }
+  }
   next();
 };
 

@@ -5,8 +5,10 @@ import {
   getSiteVisits,
   getSiteVisitById,
   updateStatus,
-  updateOutcome
+  updateOutcome,
+  deleteSiteVisit
 } from '../controllers/siteVisitController';
+import { requireRole } from '../middleware/roleMiddleware';
 
 const router = express.Router();
 
@@ -18,5 +20,6 @@ router.post('/', createSiteVisit);
 router.get('/:id', getSiteVisitById);
 router.patch('/:id/status', updateStatus);
 router.patch('/:id/outcome', updateOutcome);
+router.delete('/:id', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), deleteSiteVisit);
 
 export default router;

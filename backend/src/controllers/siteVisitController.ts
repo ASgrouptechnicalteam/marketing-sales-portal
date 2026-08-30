@@ -95,11 +95,29 @@ export const updateOutcome = async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const userId = (req as any).user.id;
     const role = (req as any).user.role;
-    
+
     const visit = await SiteVisitService.updateOutcome(id, req.body, userId, role);
     res.json({ success: true, data: visit });
   } catch (error: any) {
     console.error('updateOutcome error:', error);
+    if (error.message.includes('Forbidden')) {
+      res.status(403).json({ success: false, message: error.message });
+    } else {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+};
+
+export const deleteSiteVisit = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const userId = (req as any).user.id;
+    const role = (req as any).user.role;
+
+    await SiteVisitService.deleteSiteVisit(id, userId, role);
+    res.json({ success: true, message: 'Site Visit deleted successfully' });
+  } catch (error: any) {
+    console.error('deleteSiteVisit error:', error);
     if (error.message.includes('Forbidden')) {
       res.status(403).json({ success: false, message: error.message });
     } else {

@@ -7,12 +7,11 @@ import {
   submitProject, 
   approveProject, 
   rejectProject, 
-  archiveProject, 
-  getProjects, 
+  getProjects,
   getProjectById,
   toggleHotStatus,
   toggleFeaturedStatus,
-  deleteProject
+  updateProjectStatus
 } from '../controllers/projectController';
 import { uploadProjectMedia, deleteProjectMedia, setCoverPhoto } from '../controllers/mediaController';
 import { upload } from '../utils/fileUpload';
@@ -31,10 +30,9 @@ router.get('/:id', getProjectById);
 router.post('/', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), validateCreateProject, createProject);
 router.patch('/:id', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), validateUpdateProject, updateProject);
 router.patch('/:id/submit', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), submitProject);
-router.patch('/:id/archive', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), archiveProject);
 router.patch('/:id/hot', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), toggleHotStatus);
 router.patch('/:id/featured', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), toggleFeaturedStatus);
-router.delete('/:id', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), deleteProject);
+router.patch('/:id/status', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), updateProjectStatus);
 import { 
   getPublishedLayout, 
   getDraftLayout, 

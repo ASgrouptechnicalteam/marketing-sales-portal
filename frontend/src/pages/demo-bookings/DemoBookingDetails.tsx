@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 export default function DemoBookingDetails() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function DemoBookingDetails() {
   
   const [actionLoading, setActionLoading] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [cancelBookingModal, setCancelBookingModal] = useState(false);
   
   const [outcomeData, setOutcomeData] = useState({
     outcome: '',
@@ -212,11 +214,7 @@ export default function DemoBookingDetails() {
 
           {['SCHEDULED', 'ON_THE_WAY', 'ARRIVED'].includes(booking.status) && (
             <Button
-              onClick={() => {
-                if(window.confirm('Are you sure you want to cancel this booking?')) {
-                  updateStatus('CANCELLED');
-                }
-              }}
+              onClick={() => setCancelBookingModal(true)}
               disabled={actionLoading}
               variant="danger"
               leftIcon={<XCircle className="mr-2 h-4 w-4" />}
@@ -297,6 +295,17 @@ export default function DemoBookingDetails() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={cancelBookingModal}
+        title="Cancel Booking"
+        message="Are you sure you want to cancel this booking? This action cannot be undone."
+        onClose={() => setCancelBookingModal(false)}
+        onConfirm={() => {
+          updateStatus('CANCELLED');
+          setCancelBookingModal(false);
+        }}
+      />
     </div>
   );
 }

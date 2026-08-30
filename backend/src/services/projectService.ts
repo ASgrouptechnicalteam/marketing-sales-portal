@@ -184,47 +184,10 @@ export class ProjectService {
     });
   }
 
-  static async safeDeleteProject(projectId: string) {
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-      include: {
-        bookings: true,
-        siteVisits: true,
-        commissionPolicies: true,
-        inventory: {
-          where: { status: { not: 'AVAILABLE' } }
-        }
-      }
-    });
-
-    if (!project) throw new Error('Project not found');
-
-    const hasDependencies = 
-      project.bookings.length > 0 || 
-      project.siteVisits.length > 0 || 
-      project.commissionPolicies.length > 0 ||
-      project.inventory.length > 0;
-
-    if (hasDependencies) {
-      // Safe Archive if dependencies exist
-      return prisma.project.update({
-        where: { id: projectId },
-        data: { status: 'ARCHIVED' }
-      });
-    }
-
-    // Hard delete if perfectly safe
-    return prisma.project.delete({
-      where: { id: projectId }
-    });
-  }
-
-  static async archiveProject(projectId: string) {
+  static async updateProjectStatus(projectId: string, status: string) {
     return prisma.project.update({
       where: { id: projectId },
-      data: {
-        status: 'ARCHIVED'
-      }
+      data: { status }
     });
   }
 

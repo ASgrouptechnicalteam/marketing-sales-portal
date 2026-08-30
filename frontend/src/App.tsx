@@ -21,6 +21,7 @@ const EditUser = React.lazy(() => import('./pages/users/EditUser'));
 const UserDetails = React.lazy(() => import('./pages/users/UserDetails'));
 const Projects = React.lazy(() => import('./pages/projects/Projects'));
 const CreateProject = React.lazy(() => import('./pages/projects/CreateProject'));
+const EditProject = React.lazy(() => import('./pages/projects/EditProject'));
 const ProjectDetails = React.lazy(() => import('./pages/projects/ProjectDetails'));
 const BookingsList = React.lazy(() => import('./pages/bookings/BookingsList'));
 const Commissions = React.lazy(() => import('./pages/commissions/Commissions'));
@@ -47,6 +48,7 @@ const FaqPage = React.lazy(() => import('./pages/help/Faq'));
 const FaqManager = React.lazy(() => import('./pages/cms/FaqManager'));
 const InventoryList = React.lazy(() => import('./pages/inventory/InventoryList'));
 
+
 function App() {
   return (
     <PwaProvider>
@@ -56,6 +58,9 @@ function App() {
           <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
+          <Route path="notifications" element={<Notifications />} />
+
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
           <Route path="/public/reviews/:token" element={<PublicReviewForm />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           
@@ -152,6 +157,17 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <CreateProject />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/projects/:id/edit"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <EditProject />
                 </AppLayout>
               </ProtectedRoute>
             }
@@ -423,6 +439,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+
           <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

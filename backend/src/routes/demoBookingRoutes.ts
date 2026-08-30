@@ -3,9 +3,11 @@ import {
   createDemoBooking,
   getDemoBookings,
   getDemoBookingById,
-  updateDemoBookingStatus
+  updateDemoBookingStatus,
+  deleteDemoBooking
 } from '../controllers/demoBookingController';
 import { authenticate } from '../middleware/authMiddleware';
+import { requireRole } from '../middleware/roleMiddleware';
 
 const router = Router();
 
@@ -22,5 +24,8 @@ router.get('/:id', getDemoBookingById);
 
 // Update Status
 router.patch('/:id/status', updateDemoBookingStatus);
+
+// Delete
+router.delete('/:id', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), deleteDemoBooking);
 
 export default router;

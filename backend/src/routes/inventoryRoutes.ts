@@ -6,7 +6,8 @@ import {
   updateInventoryUnit, 
   updateInventoryStatus, 
   getInventoryByProject, 
-  getInventoryUnitById 
+  getInventoryUnitById,
+  deleteInventoryUnit
 } from '../controllers/inventoryController';
 import { validateCreateInventory, validateUpdateInventoryStatus } from '../validators/inventoryValidator';
 
@@ -23,5 +24,6 @@ router.get('/:id', getInventoryUnitById);
 router.post('/', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), validateCreateInventory, createInventoryUnit);
 router.patch('/:id', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), updateInventoryUnit);
 router.patch('/:id/status', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), validateUpdateInventoryStatus, updateInventoryStatus);
+router.delete('/:id', requireRole('MD', 'CHANNEL_PARTNER_MANAGER'), deleteInventoryUnit);
 
 export default router;

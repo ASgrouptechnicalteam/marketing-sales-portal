@@ -8,7 +8,7 @@ export class OfferService {
   static async getAll(role: string, userId?: string): Promise<any[]> {
     const isAssociate = role === 'ASSOCIATE';
     const where: any = isAssociate ? {
-      status: 'ACTIVE',
+      status: { not: 'ARCHIVED' },
       OR: [
         { startDate: null },
         { startDate: { lte: new Date() } }
@@ -68,7 +68,7 @@ export class OfferService {
   }
 
   static async getById(id: string): Promise<Offer | null> {
-    return prisma.offer.findUnique({
+    return prisma.offer.findFirst({
       where: { id },
       include: {
         project: {
@@ -128,12 +128,11 @@ export class OfferService {
     const before = await prisma.offer.findUnique({ where: { id } });
     if (!before) throw new Error('Offer not found');
 
-    const item = await prisma.offer.update({
-      where: { id },
-      data: { status: 'ARCHIVED' }
+    const item = await prisma.offer.delete({
+      where: { id }
     });
     
-    await AuditService.log(actorId, 'ARCHIVE_OFFER', 'Offer', id, before, item);
+    await AuditService.log(actorId, 'DELETE_OFFER', 'Offer', id, before, null);
     return item;
   }
 }

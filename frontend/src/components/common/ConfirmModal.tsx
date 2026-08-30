@@ -12,7 +12,8 @@ export interface ConfirmModalProps {
   isDestructive?: boolean;
   loading?: boolean;
   onConfirm: () => void;
-  onClose: () => void;
+  onClose?: () => void;
+  onCancel?: () => void;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -26,8 +27,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   loading = false,
   onConfirm,
   onClose,
+  onCancel,
 }) => {
   if (!isOpen) return null;
+
+  const handleClose = onCancel || onClose || (() => {});
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -36,7 +40,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <div className="flex items-center justify-between border-b px-6 py-4">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={handleClose}
             disabled={loading}
             className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
           >
@@ -68,10 +73,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t bg-gray-50 px-6 py-4">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
             {cancelText}
           </Button>
           <button
+            type="button"
             onClick={onConfirm}
             disabled={loading}
             className={`inline-flex items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${

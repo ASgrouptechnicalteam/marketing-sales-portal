@@ -7,6 +7,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 export default function SiteVisitDetails() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ export default function SiteVisitDetails() {
   
   const [actionLoading, setActionLoading] = useState(false);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [cancelVisitModal, setCancelVisitModal] = useState(false);
   
   const [outcomeData, setOutcomeData] = useState({
     outcome: '',
@@ -222,11 +224,7 @@ export default function SiteVisitDetails() {
 
           {['SCHEDULED', 'ON_THE_WAY', 'ARRIVED'].includes(visit.status) && (
             <Button
-              onClick={() => {
-                if(window.confirm('Are you sure you want to cancel this visit?')) {
-                  updateStatus('CANCELLED');
-                }
-              }}
+              onClick={() => setCancelVisitModal(true)}
               disabled={actionLoading}
               variant="danger"
               leftIcon={<XCircle className="mr-2 h-4 w-4" />}
@@ -307,6 +305,17 @@ export default function SiteVisitDetails() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={cancelVisitModal}
+        title="Cancel Visit"
+        message="Are you sure you want to cancel this visit? This action cannot be undone."
+        onClose={() => setCancelVisitModal(false)}
+        onConfirm={() => {
+          updateStatus('CANCELLED');
+          setCancelVisitModal(false);
+        }}
+      />
     </div>
   );
 }

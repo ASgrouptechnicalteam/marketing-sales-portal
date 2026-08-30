@@ -97,5 +97,5 @@ export const navigationConfig: NavigationItem[] = [
     path: '/faq',
     icon: HelpCircle,
     allowedRoles: ['MD', 'CHANNEL_PARTNER_MANAGER', 'ASSOCIATE'],
-  }
+  },
 ];

@@ -45,7 +45,7 @@ export class InventoryService {
   }
 
   static async getInventoryUnitById(id: string, isManager: boolean) {
-    const unit = await prisma.inventoryUnit.findUnique({
+    const unit = await prisma.inventoryUnit.findFirst({
       where: { id },
       include: { project: true }
     });
@@ -59,5 +59,26 @@ export class InventoryService {
     }
 
     return unit;
+  }
+
+  static async deleteInventoryUnit(id: string, authenticatedUserId: string) {
+    const unit = await prisma.inventoryUnit.findUnique({
+      where: { id },
+      include: { booking: true }
+    });
+
+    if (!unit) {
+      throw new Error('Inventory unit not found');
+    }
+
+    if (unit.booking) {
+      throw new Error('Cannot delete an inventory unit that has a booking associated with it');
+    }
+
+    await prisma.inventoryUnit.delete({
+      where: { id }
+    });
+
+    return true;
   }
 }

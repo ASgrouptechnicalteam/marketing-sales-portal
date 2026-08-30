@@ -55,7 +55,7 @@ const safeUserSelect = {
 
 async function generateUserId(): Promise<string> {
   const prefix = 'RS';
-  
+
   // Find all current RS users
   const users = await prisma.user.findMany({
     where: { userIdentifier: { startsWith: 'RS-' } },
@@ -78,7 +78,7 @@ async function generateUserId(): Promise<string> {
   const nextNum = maxNum === 0 ? 1 : maxNum + 1;
   // Pad to a minimum of 4 digits
   const paddedNum = nextNum.toString().padStart(4, '0');
-  
+
   return `${prefix}-${paddedNum}`;
 }
 
@@ -107,18 +107,18 @@ export const userService = {
       const currentUser = await prisma.user.findUnique({ where: { id: params.authenticatedUserId } });
       const descendants = await HierarchyService.getAllDescendants(params.authenticatedUserId);
       const allowedIds = descendants.map(d => d.id);
-      
+
       allowedIds.push(params.authenticatedUserId); // User can see themselves
       if (currentUser?.parentId) {
         allowedIds.push(currentUser.parentId); // Immediate superior
       }
-      
+
       if (currentUser?.teamId) {
         // Find everyone in the same main team
         const teamMembers = await prisma.user.findMany({ where: { teamId: currentUser.teamId }, select: { id: true } });
         teamMembers.forEach(m => allowedIds.push(m.id));
       }
-      
+
       where.id = { in: Array.from(new Set(allowedIds)) };
     }
 
@@ -185,18 +185,18 @@ export const userService = {
         team: { select: { id: true, name: true } }
       },
     });
-    
+
     if (!user) return null;
 
     if (authenticatedUserId && authenticatedUserRole && authenticatedUserRole !== 'MD') {
       if (id !== authenticatedUserId) {
         const downline = await HierarchyService.getAllDescendants(authenticatedUserId);
         const allowedIds = downline.map(d => d.id);
-        
+
         // Also allow viewing immediate parent
         const currentUser = await prisma.user.findUnique({ where: { id: authenticatedUserId } });
         if (currentUser?.parentId) allowedIds.push(currentUser.parentId);
-        
+
         // Also allow viewing team members
         if (currentUser?.teamId) {
           const teamMembers = await prisma.user.findMany({ where: { teamId: currentUser.teamId }, select: { id: true } });
@@ -208,7 +208,7 @@ export const userService = {
         }
       }
     }
-    
+
     const stats = await HierarchyService.getHierarchyStats(user.id);
 
     return {
@@ -308,7 +308,7 @@ export const userService = {
             parent: { select: { userIdentifier: true } },
           }
         });
-        
+
         break;
       } catch (error: any) {
         if (error.code === 'P2002' && error.meta?.target?.includes('userIdentifier')) {
@@ -370,7 +370,7 @@ export const userService = {
       designation: data.designation,
       teamId: data.teamId,
     };
-    
+
     const designationToCommission: Record<string, number> = {
       'Marketing Manager': 10,
       'Senior Marketing Manager': 12,
@@ -389,7 +389,7 @@ export const userService = {
     if (targetDesignation && designationToCommission[targetDesignation]) {
       updateData.commissionPercentage = designationToCommission[targetDesignation];
     }
-    
+
     if (data.dateOfJoining) {
       updateData.dateOfJoining = new Date(data.dateOfJoining);
     }
@@ -401,7 +401,7 @@ export const userService = {
         const parentUser = await prisma.user.findUnique({ where: { userIdentifier: data.referralUserId } });
         if (!parentUser) throw new Error('Referral User ID not found');
         if (parentUser.id === id) throw new Error('Cannot assign self as referral');
-        
+
         // Target parent must be in CPM's downline or CPM themselves
         if (authenticatedUserId && authenticatedUserRole === 'CHANNEL_PARTNER_MANAGER' && parentUser.id !== authenticatedUserId) {
             const downline = await HierarchyService.getAllDescendants(authenticatedUserId);
@@ -454,12 +454,12 @@ export const userService = {
              where: { headUserId: id },
              data: { headUserId: null }
           });
-          
+
           await prisma.team.update({
              where: { id: data.headedTeamId },
              data: { headUserId: id }
           });
-          
+
           // Special rule for team head: their parent is MD/root (null) and they belong to this team
           updateData.parentId = null;
           updateData.teamId = data.headedTeamId;
@@ -499,8 +499,8 @@ export const userService = {
 
     const targetUser = await prisma.user.findUnique({ where: { id }, include: { role: true } });
     if (!targetUser) throw new Error('User not found');
-    
-    if ((status === 'DEACTIVATED' || status === 'DELETED') && 
+
+    if ((status === 'DEACTIVATED' || status === 'DELETED') &&
         (targetUser.role.name === 'MD' || targetUser.role.name === 'CHANNEL_PARTNER_MANAGER')) {
       throw new Error('Forbidden: Cannot deactivate or delete an MD or CPM account');
     }
@@ -565,9 +565,9 @@ export const userService = {
     };
     if (email) where.OR.push({ email });
     if (userId) where.OR.push({ userId });
-    
+
     if (where.OR.length === 0) return false;
-    
+
     if (excludeId) {
       where.id = { not: excludeId };
     }
@@ -585,11 +585,6 @@ export const userService = {
       where: { id },
       include: {
         role: true,
-        children: true,
-        bookings: true,
-        commissionTransactions: true,
-        siteVisits: true,
-        demoBookings: true
       }
     });
 
@@ -601,39 +596,11 @@ export const userService = {
       throw new Error('Forbidden: Cannot delete an MD or CPM account');
     }
 
-    // Dependency check 1: Active descendants
-    if (user.children && user.children.length > 0) {
-      throw new Error('Cannot delete user with active team descendants. Reassign them first.');
-    }
+    const deletedUser = await prisma.user.delete({
+      where: { id },
+      select: safeUserSelect
+    });
 
-    // Dependency check 2: Business History (Bookings, Commissions, Visits)
-    const hasBusinessHistory = 
-      (user.bookings && user.bookings.length > 0) ||
-      (user.commissionTransactions && user.commissionTransactions.length > 0) ||
-      (user.siteVisits && user.siteVisits.length > 0) ||
-      (user.demoBookings && user.demoBookings.length > 0);
-
-    if (hasBusinessHistory) {
-      // Soft delete: update status to DELETED to preserve referential integrity
-      const softDeletedUser = await prisma.user.update({
-        where: { id },
-        data: { status: 'DELETED', activeSessionId: null },
-        select: safeUserSelect
-      });
-      return { type: 'soft', user: { ...softDeletedUser, role: softDeletedUser.role.name } };
-    } else {
-      // Hard delete: No critical dependencies
-      // Clean up minor non-critical relations first if needed, though Cascade should handle or we manually delete them.
-      // Notifications, ReviewRequests etc might block it, let's delete them first to be safe, or just rely on the DB.
-      // Actually, Prisma schema doesn't have onDelete: Cascade for most relations.
-      await prisma.notification.deleteMany({ where: { userId: id } });
-      await prisma.teamRequest.deleteMany({ where: { OR: [{ requesterId: id }, { targetUserId: id }, { proposedParentId: id }] } });
-      await prisma.commissionPolicy.deleteMany({ where: { userId: id } });
-      
-      await prisma.user.delete({
-        where: { id }
-      });
-      return { type: 'hard' };
-    }
+    return { type: 'hard', user: { ...deletedUser, role: deletedUser.role.name } };
   }
 };

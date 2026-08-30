@@ -462,7 +462,9 @@ export const deleteTeam = async (req: AuthenticatedRequest, res: Response) => {
       });
     }
 
-    await prisma.team.delete({ where: { id } });
+    await prisma.team.delete({
+      where: { id }
+    });
 
     return res.json({ success: true, message: 'Team deleted successfully' });
   } catch (error) {

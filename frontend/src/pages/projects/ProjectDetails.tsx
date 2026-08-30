@@ -10,25 +10,28 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { AddUnitModal } from '../../components/projects/inventory/AddUnitModal';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const ProjectDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'layout' | 'gallery' | 'layout_manager'>('overview');
-  
+
   // Media upload and viewer state
   const [isUploading, setIsUploading] = useState(false);
   const [settingCoverId, setSettingCoverId] = useState<string | null>(null);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
   const [isAddUnitModalOpen, setIsAddUnitModalOpen] = useState(false);
+  const [statusToggleModal, setStatusToggleModal] = useState(false);
+  const [deleteMediaId, setDeleteMediaId] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  
+
   const isManager = user?.role === 'MD' || user?.role === 'CHANNEL_PARTNER_MANAGER';
   const isMD = user?.role === 'MD';
 
@@ -60,9 +63,9 @@ const ProjectDetails: React.FC = () => {
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     const files = Array.from(e.target.files);
-    
+
     // Validate file sizes first
     const oversizedFiles = files.filter(f => f.size > 10 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
@@ -77,7 +80,7 @@ const ProjectDetails: React.FC = () => {
 
     setIsUploading(true);
     let uploadErrors = false;
-    
+
     try {
       // If uploading exactly one image, we can ask about the cover image
       let isCover = false;
@@ -89,11 +92,11 @@ const ProjectDetails: React.FC = () => {
         const file = validFiles[i];
         const formData = new FormData();
         formData.append('file', file);
-        
+
         // Only the first image gets the cover flag if chosen
         formData.append('isCover', (isCover && i === 0) ? 'true' : 'false');
         formData.append('mediaType', file.type.startsWith('video/') ? 'VIDEO' : file.type === 'application/pdf' ? 'DOCUMENT' : 'GALLERY');
-        
+
         try {
           await api.post(`/projects/${id}/media`, formData);
         } catch (err) {
@@ -105,7 +108,7 @@ const ProjectDetails: React.FC = () => {
       if (uploadErrors) {
         alert('Some files failed to upload. Please try again.');
       }
-      
+
       fetchProject();
     } catch (err: any) {
       alert('Failed to process media upload');
@@ -144,19 +147,25 @@ const ProjectDetails: React.FC = () => {
           <p>{successMsg}</p>
         </div>
       )}
-      
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <button 
+        <button
           onClick={() => navigate('/projects')}
           className="flex items-center gap-2 text-muted-text hover:text-primary-navy transition-colors w-fit"
         >
           <ArrowLeft size={18} />
           <span className="font-medium text-sm">Back to Projects</span>
         </button>
-        
+
         {isManager && (
           <div className="flex gap-2">
+            <Button
+              onClick={() => navigate(`/projects/${id}/edit`)}
+              variant="secondary"
+            >
+              Edit Project
+            </Button>
             {project.status === 'DRAFT' && (
               <Button onClick={() => handleAction('submit')}>Submit for Approval</Button>
             )}
@@ -173,46 +182,59 @@ const ProjectDetails: React.FC = () => {
                   }} variant="danger" leftIcon={<XCircle size={16} />}>Reject</Button>
               </>
             )}
-            <Button 
+            <Button
               onClick={() => {
                 api.patch(`/projects/${id}/hot`, { isHot: !project.isHot })
                   .then(() => fetchProject())
                   .catch((err: any) => alert(err.response?.data?.message || 'Failed'));
-              }} 
+              }}
               variant="outline"
               className={project.isHot ? "bg-orange-50 border-orange-200 text-orange-600" : ""}
             >
               {project.isHot ? 'Remove from Hot' : 'Mark as Hot'}
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 api.patch(`/projects/${id}/featured`, { isFeatured: !project.isFeatured })
                   .then(() => fetchProject())
                   .catch((err: any) => alert(err.response?.data?.message || 'Failed'));
-              }} 
+              }}
               variant="outline"
               className={project.isFeatured ? "bg-blue-50 border-blue-200 text-blue-600" : ""}
             >
               {project.isFeatured ? 'Remove from Featured' : 'Mark as Featured'}
             </Button>
-            <Button 
-              onClick={() => {
-                if (window.confirm('Are you sure you want to delete or archive this project? Historical bookings may be preserved.')) {
-                  api.delete(`/projects/${id}`)
-                    .then(() => {
-                      alert('Project deleted successfully');
-                      navigate('/projects');
-                    })
-                    .catch((err: any) => alert(err.response?.data?.message || 'Failed to delete project'));
-                }
-              }} 
-              variant="danger"
+            <Button
+              onClick={() => setStatusToggleModal(true)}
+              variant={project.status === 'ACTIVE' ? "danger" : "success"}
             >
-              Delete Project
+              {project.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
             </Button>
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={statusToggleModal}
+        title={project?.status === 'ACTIVE' ? 'Deactivate Project' : 'Activate Project'}
+        message={
+          project?.status === 'ACTIVE'
+            ? "Are you sure you want to deactivate this project?\nThe project will no longer be visible to users."
+            : "Are you sure you want to activate this project?\nThe project will become visible to users again."
+        }
+        onConfirm={() => {
+          const newStatus = project.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+          api.patch(`/projects/${id}/status`, { status: newStatus })
+            .then(() => {
+              fetchProject();
+              setStatusToggleModal(false);
+            })
+            .catch((err: any) => alert(err.response?.data?.message || 'Failed to update status'));
+        }}
+        onCancel={() => setStatusToggleModal(false)}
+        confirmText="OK"
+        cancelText="Cancel"
+      />
 
       {/* Hero Section */}
       <Card padding="none" className="overflow-hidden">
@@ -223,7 +245,7 @@ const ProjectDetails: React.FC = () => {
             <Building2 size={64} className="text-gray-300" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-primary-navy/80 to-transparent"></div>
-          
+
           <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 text-white">
             <div className="flex flex-wrap items-center gap-3 mb-3">
               <Badge variant="neutral" className="bg-white/20 text-white border-none backdrop-blur-md">{project.code}</Badge>
@@ -258,12 +280,12 @@ const ProjectDetails: React.FC = () => {
           { id: 'gallery', label: 'Gallery', icon: Building2 },
           ...(isManager ? [{ id: 'layout_manager', label: 'Manage Layout', icon: LayoutDashboard }] : [])
         ].map(tab => (
-          <button 
+          <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-2 py-3 px-5 font-semibold text-sm transition-all whitespace-nowrap rounded-t-lg ${
-              activeTab === tab.id 
-                ? 'bg-white border-t border-l border-r border-border-subtle text-action-blue -mb-px' 
+              activeTab === tab.id
+                ? 'bg-white border-t border-l border-r border-border-subtle text-action-blue -mb-px'
                 : 'text-muted-text hover:text-primary-navy hover:bg-gray-50 border-transparent border-t border-l border-r'
             }`}
           >
@@ -276,15 +298,15 @@ const ProjectDetails: React.FC = () => {
       {/* Tab Content */}
       <div className="pt-2">
         {activeTab === 'layout_manager' && isManager ? (
-          <LayoutDesigner 
-            projectId={project.id} 
-            inventoryUnits={project.inventory || []} 
+          <LayoutDesigner
+            projectId={project.id}
+            inventoryUnits={project.inventory || []}
             onRefreshProject={fetchProject}
           />
         ) : activeTab === 'layout' ? (
           <div className="space-y-6">
             <LayoutViewer projectId={project.id} inventoryUnits={project.inventory || []} />
-            
+
             <Card padding="md">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-primary-navy">Inventory List</h2>
@@ -294,7 +316,7 @@ const ProjectDetails: React.FC = () => {
                   </Button>
                 )}
               </div>
-              
+
               {project.inventory && project.inventory.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse min-w-[600px]">
@@ -337,17 +359,17 @@ const ProjectDetails: React.FC = () => {
               <h2 className="text-xl font-bold text-primary-navy">Project Gallery</h2>
               {isManager && (
                 <>
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     ref={fileInputRef}
                     onChange={handleMediaUpload}
                     accept="image/*,video/*,application/pdf"
                     multiple
-                    className="hidden" 
+                    className="hidden"
                   />
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     isLoading={isUploading}
                     onClick={() => fileInputRef.current?.click()}
                   >
@@ -356,7 +378,7 @@ const ProjectDetails: React.FC = () => {
                 </>
               )}
             </div>
-            
+
             {project.media && project.media.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {project.media.map((item: any) => (
@@ -367,7 +389,7 @@ const ProjectDetails: React.FC = () => {
                         COVER
                       </div>
                     )}
-                    <div 
+                    <div
                       className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                       onClick={() => setViewerImage(getStaticUrl(item.url))}
                     >
@@ -376,25 +398,18 @@ const ProjectDetails: React.FC = () => {
                       </span>
                       {isManager && (
                         <>
-                          <button 
+                          <button
                             className="absolute top-2 right-2 text-white bg-red-500/80 hover:bg-red-600 rounded-full p-1.5 z-20"
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              if (window.confirm('Delete this media?')) {
-                                try {
-                                  await api.delete(`/projects/media/${item.id}`);
-                                  fetchProject();
-                                } catch (err) {
-                                  alert('Failed to delete media');
-                                }
-                              }
+                              setDeleteMediaId(item.id);
                             }}
                           >
                             <XCircle size={14} />
                           </button>
-                          
+
                           {!item.isCover && (
-                            <button 
+                            <button
                               disabled={settingCoverId === item.id}
                               className="absolute top-2 right-10 text-white bg-blue-500/80 hover:bg-blue-600 rounded px-2 py-1 text-xs font-bold shadow-md z-20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                               onClick={async (e) => {
@@ -454,7 +469,7 @@ const ProjectDetails: React.FC = () => {
                 <Card padding="md">
                   <h3 className="text-lg font-bold text-primary-navy mb-4">Amenities</h3>
                   <div className="flex flex-wrap gap-2.5">
-                    {Object.entries(project.amenities).map(([key, value]) => 
+                    {Object.entries(project.amenities).map(([key, value]) =>
                       value ? (
                         <span key={key} className="px-4 py-2 bg-brand-gold/10 text-[#c29633] text-sm font-bold rounded-lg border border-brand-gold/20 capitalize shadow-sm">
                           {key.replace(/([A-Z])/g, ' $1').trim()}
@@ -527,20 +542,20 @@ const ProjectDetails: React.FC = () => {
       </div>
 
       {viewerImage && (
-        <div 
+        <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
           onClick={() => setViewerImage(null)}
         >
-          <button 
+          <button
             className="absolute top-4 right-4 text-white hover:text-brand-gold p-2 bg-black/50 rounded-full transition-colors z-50"
             onClick={(e) => { e.stopPropagation(); setViewerImage(null); }}
           >
             <X size={24} />
           </button>
           <div className="relative w-full max-w-6xl max-h-[90vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={viewerImage} 
-              alt="Gallery Fullscreen" 
+            <img
+              src={viewerImage}
+              alt="Gallery Fullscreen"
               className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
             />
           </div>
@@ -559,6 +574,43 @@ const ProjectDetails: React.FC = () => {
           }}
         />
       )}
+
+      <ConfirmModal
+        isOpen={statusToggleModal}
+        title={project.status === 'ACTIVE' ? "Deactivate Project" : "Activate Project"}
+        message={project.status === 'ACTIVE'
+          ? "Are you sure you want to deactivate this project? The project will no longer be visible to users."
+          : "Are you sure you want to activate this project? The project will become visible to users again."}
+        onClose={() => setStatusToggleModal(false)}
+        onConfirm={() => {
+          const newStatus = project.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+          api.patch(`/projects/${id}/status`, { status: newStatus })
+            .then(() => {
+              setSuccessMsg(`Project ${newStatus === 'ACTIVE' ? 'activated' : 'deactivated'} successfully`);
+              setStatusToggleModal(false);
+              fetchProject();
+              setTimeout(() => setSuccessMsg(''), 3000);
+            })
+            .catch((err: any) => alert(err.response?.data?.message || 'Failed to update project status'));
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteMediaId}
+        title="Delete Media"
+        message="Are you sure you want to delete this media? If you delete it, you cannot retrieve the data."
+        onClose={() => setDeleteMediaId(null)}
+        onConfirm={async () => {
+          try {
+            await api.delete(`/projects/media/${deleteMediaId}`);
+            fetchProject();
+          } catch (err) {
+            alert('Failed to delete media');
+          } finally {
+            setDeleteMediaId(null);
+          }
+        }}
+      />
     </div>
   );
 };

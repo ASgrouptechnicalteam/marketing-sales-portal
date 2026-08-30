@@ -49,7 +49,7 @@ export class SiteVisitService {
    * Retrieves a specific Site Visit and validates IDOR access.
    */
   static async getSiteVisitById(id: string, userId: string, role: string) {
-    const visit = await prisma.siteVisit.findUnique({
+    const visit = await prisma.siteVisit.findFirst({
       where: { id },
       include: {
         project: { select: { name: true, code: true } },
@@ -213,5 +213,31 @@ export class SiteVisitService {
     );
 
     return updatedVisit;
+  }
+
+  /**
+   * Deletes a Site Visit
+   */
+  static async deleteSiteVisit(id: string, userId: string, role: string) {
+    const visit = await this.getSiteVisitById(id, userId, role);
+
+    if (role !== 'MD' && role !== 'CHANNEL_PARTNER_MANAGER') {
+      throw new Error('Forbidden: Only management roles can delete site visits');
+    }
+
+    const deletedVisit = await prisma.siteVisit.delete({
+      where: { id }
+    });
+
+    await AuditService.log(
+      userId,
+      'DELETE_SITE_VISIT',
+      'SiteVisit',
+      id,
+      { status: visit.status },
+      null
+    );
+
+    return deletedVisit;
   }
 }

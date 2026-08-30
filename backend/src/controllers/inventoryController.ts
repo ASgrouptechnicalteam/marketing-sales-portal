@@ -64,3 +64,17 @@ export const getInventoryUnitById = async (req: AuthenticatedRequest, res: Respo
     return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+export const deleteInventoryUnit = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params as { id: string };
+    await InventoryService.deleteInventoryUnit(id, req.user!.id);
+    return res.status(200).json({ success: true, message: 'Inventory unit deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting inventory unit:', error);
+    if (error.message.includes('Cannot delete')) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

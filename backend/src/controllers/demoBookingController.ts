@@ -86,3 +86,21 @@ export const updateDemoBookingStatus = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const deleteDemoBooking = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+    const userId = (req as any).user.id;
+    const role = (req as any).user.role;
+
+    await DemoBookingService.deleteDemoBooking(id, userId, role);
+    res.json({ success: true, message: 'Demo Booking deleted successfully' });
+  } catch (error: any) {
+    console.error('deleteDemoBooking error:', error);
+    if (error.message.includes('Forbidden')) {
+      res.status(403).json({ success: false, message: error.message });
+    } else {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+};

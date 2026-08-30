@@ -45,7 +45,7 @@ export class DemoBookingService {
    * Retrieves a specific Demo Booking and validates IDOR access.
    */
   static async getDemoBookingById(id: string, userId: string, role: string) {
-    const booking = await prisma.demoBooking.findUnique({
+    const booking = await prisma.demoBooking.findFirst({
       where: { id },
       include: {
         project: { select: { name: true, code: true } },
@@ -179,5 +179,31 @@ export class DemoBookingService {
     }
 
     return updated;
+  }
+
+  /**
+   * Deletes a Demo Booking
+   */
+  static async deleteDemoBooking(id: string, userId: string, role: string) {
+    const booking = await this.getDemoBookingById(id, userId, role);
+
+    if (role !== 'MD' && role !== 'CHANNEL_PARTNER_MANAGER') {
+      throw new Error('Forbidden: Only management roles can delete demo bookings');
+    }
+
+    const deletedBooking = await prisma.demoBooking.delete({
+      where: { id }
+    });
+
+    await AuditService.log(
+      userId,
+      'DELETE_DEMO_BOOKING',
+      'DemoBooking',
+      id,
+      { status: booking.status },
+      null
+    );
+
+    return deletedBooking;
   }
 }

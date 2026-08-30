@@ -10,7 +10,7 @@ async function convert() {
   try {
     const svgBuffer = fs.readFileSync(svgPath);
 
-    // 192x192 icon with 24px padding on each side (logo size: 144)
+    // 192x192 icon with logo resized to 96x96 (50% of canvas) for safe maskable area
     await sharp({
       create: {
         width: 192,
@@ -19,11 +19,11 @@ async function convert() {
         background: { r: 255, g: 255, b: 255, alpha: 1 }
       }
     })
-    .composite([{ input: await sharp(svgBuffer).resize(144, 144).toBuffer(), gravity: 'center' }])
+    .composite([{ input: await sharp(svgBuffer).resize(96, 96).toBuffer(), gravity: 'center' }])
     .png()
     .toFile(out192);
 
-    // 512x512 icon with 64px padding on each side (logo size: 384)
+    // 512x512 icon with logo resized to 256x256 (50% of canvas) for safe maskable area
     await sharp({
       create: {
         width: 512,
@@ -32,7 +32,7 @@ async function convert() {
         background: { r: 255, g: 255, b: 255, alpha: 1 }
       }
     })
-    .composite([{ input: await sharp(svgBuffer).resize(384, 384).toBuffer(), gravity: 'center' }])
+    .composite([{ input: await sharp(svgBuffer).resize(256, 256).toBuffer(), gravity: 'center' }])
     .png()
     .toFile(out512);
 

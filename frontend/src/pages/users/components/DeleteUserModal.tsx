@@ -27,6 +27,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ isOpen, onClose, onCo
         <div className="flex items-center justify-between border-b px-6 py-4">
           <h2 className="text-xl font-bold text-gray-900">Delete User</h2>
           <button
+            type="button"
             onClick={onClose}
             disabled={loading}
             className="rounded-full p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
@@ -85,10 +86,11 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ isOpen, onClose, onCo
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t bg-gray-50 px-6 py-4">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
+          <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <button
+            type="button"
             onClick={onConfirm}
             disabled={loading}
             className="inline-flex items-center justify-center rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50"
