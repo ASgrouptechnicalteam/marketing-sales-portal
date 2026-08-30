@@ -21,7 +21,7 @@ export default defineConfig({
         short_name: 'Marketing & Sales',
         description: 'Marketing & Sales Portal for Sonthillu Constructions',
         theme_color: '#203B73',
-        background_color: '#F4FAFC',
+        background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
         icons: [
@@ -39,7 +39,7 @@ export default defineConfig({
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable'
+            purpose: 'any'
           }
         ]
       }

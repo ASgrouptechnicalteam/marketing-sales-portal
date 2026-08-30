@@ -44,7 +44,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({ isOpen, onClose, onCo
                 Warning: Irreversible Action
               </h3>
               <p className="mt-1 text-sm text-red-700">
-                Deleting this user may affect hierarchy and historical business records. Are you absolutely sure you want to proceed?
+                If you delete this user, the data cannot be retrieved.
               </p>
             </div>
           </div>

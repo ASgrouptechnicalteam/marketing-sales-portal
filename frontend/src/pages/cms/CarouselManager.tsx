@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api, { getStaticUrl } from '../../services/api';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useAuth } from '../../context/AuthContext';
 import {
   Image as ImageIcon,
@@ -221,22 +222,20 @@ const CarouselManager: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this carousel banner?'
-      )
-    ) {
-      return;
-    }
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
 
     try {
-      await api.delete(`/v1/carousel/${id}`);
+      await api.delete(`/v1/carousel/${itemToDelete}`);
       await fetchData();
     } catch (err: any) {
       setError(
         err.response?.data?.message || 'Failed to delete'
       );
+    } finally {
+      setItemToDelete(null);
     }
   };
 
@@ -862,7 +861,7 @@ const CarouselManager: React.FC = () => {
                       <button
                         type="button"
                         onClick={() =>
-                          handleDelete(item.id)
+                          setItemToDelete(item.id)
                         }
                         className="p-2 text-red-600 hover:bg-red-50 rounded-md"
                         title="Delete"
@@ -1059,7 +1058,7 @@ const CarouselManager: React.FC = () => {
                       type="button"
                       variant="outline"
                       onClick={() =>
-                        handleDelete(item.id)
+                        setItemToDelete(item.id)
                       }
                       className="text-red-600 border-red-200 hover:bg-red-50"
                     >
@@ -1083,6 +1082,16 @@ const CarouselManager: React.FC = () => {
           </div>
         </>
       )}
+
+      <ConfirmModal
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Banner"
+        message="Are you sure you want to delete this data? If you delete it, you cannot retrieve it."
+        confirmText="Delete"
+        isDestructive={true}
+      />
     </div>
   );
 };

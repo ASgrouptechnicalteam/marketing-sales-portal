@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useAuth } from '../../context/AuthContext';
 import { Gift, Plus, Edit2, Trash2, Calendar, Target, Award, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -45,13 +46,17 @@ const OffersList: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to archive this offer?')) return;
+  const [offerToDelete, setOfferToDelete] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!offerToDelete) return;
     try {
-      await api.delete(`/v1/offers/${id}`);
+      await api.delete(`/v1/offers/${offerToDelete}`);
       fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to archive');
+    } finally {
+      setOfferToDelete(null);
     }
   };
 
@@ -110,7 +115,7 @@ const OffersList: React.FC = () => {
                     <Button variant="ghost" className="p-2" onClick={() => navigate(`/offers/${item.id}/edit`)}>
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" className="p-2 text-red-600 hover:text-red-700" onClick={() => handleDelete(item.id)}>
+                    <Button variant="ghost" className="p-2 text-red-600 hover:text-red-700" onClick={() => setOfferToDelete(item.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -174,6 +179,16 @@ const OffersList: React.FC = () => {
           <p>There are no special offers or incentives at this time.</p>
         </Card>
       )}
+
+      <ConfirmModal
+        isOpen={!!offerToDelete}
+        onClose={() => setOfferToDelete(null)}
+        onConfirm={handleDelete}
+        title="Archive Offer"
+        message="Are you sure you want to delete this data? If you delete it, you cannot retrieve it."
+        confirmText="Archive"
+        isDestructive={true}
+      />
     </div>
   );
 };

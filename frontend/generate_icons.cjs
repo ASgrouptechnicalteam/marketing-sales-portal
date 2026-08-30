@@ -9,8 +9,33 @@ const out512 = path.join(__dirname, 'public', 'pwa-512x512.png');
 async function convert() {
   try {
     const svgBuffer = fs.readFileSync(svgPath);
-    await sharp(svgBuffer).resize(192, 192).png().toFile(out192);
-    await sharp(svgBuffer).resize(512, 512).png().toFile(out512);
+
+    // 192x192 icon with 24px padding on each side (logo size: 144)
+    await sharp({
+      create: {
+        width: 192,
+        height: 192,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
+      }
+    })
+    .composite([{ input: await sharp(svgBuffer).resize(144, 144).toBuffer(), gravity: 'center' }])
+    .png()
+    .toFile(out192);
+
+    // 512x512 icon with 64px padding on each side (logo size: 384)
+    await sharp({
+      create: {
+        width: 512,
+        height: 512,
+        channels: 4,
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
+      }
+    })
+    .composite([{ input: await sharp(svgBuffer).resize(384, 384).toBuffer(), gravity: 'center' }])
+    .png()
+    .toFile(out512);
+
     console.log('Successfully generated PWA PNG icons.');
   } catch (err) {
     console.error('Error generating icons:', err);

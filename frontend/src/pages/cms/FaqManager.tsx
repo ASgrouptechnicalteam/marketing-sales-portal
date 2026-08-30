@@ -5,6 +5,7 @@ import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 export default function FaqManager() {
   const [faqs, setFaqs] = useState<Faq[]>([]);
@@ -53,13 +54,17 @@ export default function FaqManager() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this FAQ?')) return;
+  const [faqToDelete, setFaqToDelete] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!faqToDelete) return;
     try {
-      await deleteFaq(id);
+      await deleteFaq(faqToDelete);
       fetchFaqs();
     } catch (err) {
       console.error('Failed to delete FAQ');
+    } finally {
+      setFaqToDelete(null);
     }
   };
 
@@ -136,7 +141,7 @@ export default function FaqManager() {
                     }} variant="ghost" className="p-2">
                       <Edit2 size={18} />
                     </Button>
-                    <Button onClick={() => handleDelete(faq.id)} variant="ghost" className="p-2 text-red-600 hover:text-red-700">
+                    <Button onClick={() => setFaqToDelete(faq.id)} variant="ghost" className="p-2 text-red-600 hover:text-red-700">
                       <Trash2 size={18} />
                     </Button>
                   </div>
@@ -153,6 +158,16 @@ export default function FaqManager() {
           </Card>
         ))}
       </div>
+
+      <ConfirmModal
+        isOpen={!!faqToDelete}
+        onClose={() => setFaqToDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete FAQ"
+        message="Are you sure you want to delete this data? If you delete it, you cannot retrieve it."
+        confirmText="Delete"
+        isDestructive={true}
+      />
     </div>
   );
 }

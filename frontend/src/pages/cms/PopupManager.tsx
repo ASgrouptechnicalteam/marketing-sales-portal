@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api, { getStaticUrl } from '../../services/api';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { useAuth } from '../../context/AuthContext';
 import { Image as ImageIcon, Plus, Edit2, Trash2, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -100,19 +101,21 @@ const PopupManager: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this popup?')) {
-      return;
-    }
+  const [popupToDelete, setPopupToDelete] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!popupToDelete) return;
 
     try {
-      await api.delete(`/v1/popups/${id}`);
+      await api.delete(`/v1/popups/${popupToDelete}`);
       fetchData();
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
           'Failed to delete'
       );
+    } finally {
+      setPopupToDelete(null);
     }
   };
 
@@ -762,7 +765,7 @@ const PopupManager: React.FC = () => {
 
                     <button
                       onClick={() =>
-                        handleDelete(item.id)
+                        setPopupToDelete(item.id)
                       }
                       className="p-2 text-red-600 hover:bg-red-50 rounded-md"
                       title="Delete"
@@ -990,7 +993,7 @@ const PopupManager: React.FC = () => {
 
                         <button
                           onClick={() =>
-                            handleDelete(item.id)
+                            setPopupToDelete(item.id)
                           }
                           className="min-h-11 flex items-center justify-center gap-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium"
                           title="Delete"
@@ -1032,6 +1035,15 @@ const PopupManager: React.FC = () => {
 
       )}
 
+      <ConfirmModal
+        isOpen={!!popupToDelete}
+        onClose={() => setPopupToDelete(null)}
+        onConfirm={handleDelete}
+        title="Delete Popup"
+        message="Are you sure you want to delete this data? If you delete it, you cannot retrieve it."
+        confirmText="Delete"
+        isDestructive={true}
+      />
     </div>
   );
 };

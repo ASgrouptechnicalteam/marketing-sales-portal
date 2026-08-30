@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import { Users, User, Briefcase, Plus, ChevronRight, Trash2 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Avatar } from '../../components/ui/Avatar';
@@ -81,19 +82,26 @@ export const TeamOverview: React.FC<{ onSelectTeam: (teamId: string) => void }> 
 
   const totalMembersGlobal = teams.reduce((acc, t) => acc + t.totalMembers, 0);
 
-  const handleDeleteTeam = async (e: React.MouseEvent, teamId: string, activeMembers: number) => {
+  const [teamToDelete, setTeamToDelete] = useState<string | null>(null);
+
+  const requestDeleteTeam = (e: React.MouseEvent, teamId: string, activeMembers: number) => {
     e.stopPropagation();
     if (activeMembers > 0) {
       alert('Cannot delete this team while members are assigned. Reassign the members first.');
       return;
     }
-    if (window.confirm('Are you sure you want to delete this empty team?')) {
-      try {
-        await api.delete(`/team/main-teams/${teamId}`);
-        fetchTeams();
-      } catch (err: any) {
-        alert(err.response?.data?.message || 'Failed to delete team');
-      }
+    setTeamToDelete(teamId);
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!teamToDelete) return;
+    try {
+      await api.delete(`/team/main-teams/${teamToDelete}`);
+      fetchTeams();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Failed to delete team');
+    } finally {
+      setTeamToDelete(null);
     }
   };
 
@@ -210,7 +218,7 @@ export const TeamOverview: React.FC<{ onSelectTeam: (teamId: string) => void }> 
                   <div className="flex items-center gap-2">
                     {canManageTeams && (
                       <button 
-                        onClick={(e) => handleDeleteTeam(e, team.id, team.activeMembers)}
+                        onClick={(e) => requestDeleteTeam(e, team.id, team.activeMembers)}
                         className="h-8 w-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors"
                         title="Delete Team"
                       >
@@ -271,6 +279,16 @@ export const TeamOverview: React.FC<{ onSelectTeam: (teamId: string) => void }> 
           )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!teamToDelete}
+        onClose={() => setTeamToDelete(null)}
+        onConfirm={handleDeleteTeam}
+        title="Delete Team"
+        message="Are you sure you want to delete this data? If you delete it, you cannot retrieve it."
+        confirmText="Delete"
+        isDestructive={true}
+      />
     </div>
   );
 };

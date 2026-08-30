@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import ConfirmModal from '../common/ConfirmModal';
 import { navigationConfig } from '../../config/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut, X } from 'lucide-react';
@@ -58,7 +59,10 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ isOpen, onClose }) 
     };
   }, [isOpen, onClose]);
 
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
     onClose();
     navigate('/login');
@@ -135,7 +139,7 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ isOpen, onClose }) 
         <div className="p-4 border-t border-border-subtle bg-gray-50/50 shrink-0">
 
           <button
-            onClick={handleLogout}
+            onClick={() => setIsLogoutModalOpen(true)}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-3 text-sm text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600"
           >
             <LogOut size={20} />
@@ -143,6 +147,16 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ isOpen, onClose }) 
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        title="Logout Confirmation"
+        message="Are you sure you want to logout from this account?"
+        isDestructive={false}
+        confirmText="OK"
+      />
     </>
   );
 };

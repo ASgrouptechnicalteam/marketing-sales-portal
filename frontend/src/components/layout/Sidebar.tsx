@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import ConfirmModal from '../common/ConfirmModal';
 import { navigationConfig } from '../../config/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut } from 'lucide-react';
@@ -40,7 +41,10 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
 
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
   const handleLogout = async () => {
+    setIsLogoutModalOpen(false);
     await logout();
     navigate('/login');
   };
@@ -90,13 +94,23 @@ const Sidebar: React.FC = () => {
       {/* Logout */}
       <div className="p-4 border-t border-white/10 bg-black/20 shrink-0">
         <button
-          onClick={handleLogout}
+          onClick={() => setIsLogoutModalOpen(true)}
           className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/60 transition-colors hover:bg-red-500/10 hover:text-red-400"
         >
           <LogOut size={18} />
           <span className="font-medium">Logout</span>
         </button>
       </div>
+
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={handleLogout}
+        title="Logout Confirmation"
+        message="Are you sure you want to logout from this account?"
+        isDestructive={false}
+        confirmText="OK"
+      />
     </aside>
   );
 };
