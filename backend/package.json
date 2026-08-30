@@ -14,9 +14,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.22.0",
-    "prisma": "^5.22.0",
+    "@prisma/client": "^6.15.0",
+    "prisma": "^6.15.0",
     "typescript": "^6.0.3",
+    "@prisma/adapter-mariadb": "^6.15.0",
+    "mariadb": "^3.4.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",

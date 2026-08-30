@@ -4,9 +4,12 @@ import { TeamService } from '../services/teamService';
 import { AuditService } from '../services/auditService';
 import { NotificationService } from '../services/notificationService';
 import { HierarchyService } from '../services/hierarchyService';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import { PrismaClient } from '@prisma/client';
+
 import { z } from 'zod';
 
+const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
 const prisma = new PrismaClient();
 
 // Safe DTO mapper to exclude sensitive data
@@ -26,9 +29,9 @@ export const getMyDownline = async (req: AuthenticatedRequest, res: Response) =>
   try {
     const userId = req.user!.id;
     const userRole = req.user!.role;
-    
+
     let whereClause: any = { status: 'ACTIVE', id: { not: userId } };
-    
+
     if (userRole !== 'MD') {
       const downlineIds = await TeamService.getFullDownline(userId);
       whereClause.id = { in: downlineIds };
@@ -100,7 +103,7 @@ export const getTeamHierarchy = async (req: AuthenticatedRequest, res: Response)
 export const getTeamStatistics = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user!.id;
-    
+
     // If targetId is provided, enforce downward hierarchy visibility
     const targetId = req.query.targetId as string;
     let effectiveUserId = userId;
@@ -178,7 +181,7 @@ export const getTeamRequests = async (req: AuthenticatedRequest, res: Response) 
       whereClause = { requesterId: userId };
     } else if (role === 'CHANNEL_PARTNER_MANAGER') {
       // AM might see all or just their own, let's let them see all for now to manage
-      whereClause = {}; 
+      whereClause = {};
     }
 
     const requests = await prisma.teamRequest.findMany({
@@ -297,7 +300,7 @@ export const getTeams = async (req: AuthenticatedRequest, res: Response) => {
       where,
       orderBy: { createdAt: 'desc' }
     });
-    
+
     // Fetch head users and stats
     const teamsWithStats = await Promise.all(teams.map(async (team) => {
       let headUser = null;
@@ -307,13 +310,13 @@ export const getTeams = async (req: AuthenticatedRequest, res: Response) => {
           select: { id: true, userIdentifier: true, name: true, email: true, designation: true, profileImageUrl: true }
         });
       }
-      
+
       const totalMembers = await prisma.user.count({ where: { teamId: team.id } });
       const activeMembers = await prisma.user.count({ where: { teamId: team.id, status: 'ACTIVE' } });
-      
+
       let directMembers = 0;
       if (headUser) {
-         directMembers = await prisma.user.count({ where: { teamId: team.id, parentId: headUser.id } });
+        directMembers = await prisma.user.count({ where: { teamId: team.id, parentId: headUser.id } });
       }
 
       return {
@@ -430,7 +433,7 @@ export const updateTeamHead = async (req: AuthenticatedRequest, res: Response) =
 export const getTeamHierarchyData = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const id = req.params.id as string;
-    
+
     if (req.user!.role !== 'MD') {
       const currentUser = await prisma.user.findUnique({ where: { id: req.user!.id } });
       if (currentUser?.teamId !== id) {
@@ -449,18 +452,18 @@ export const getTeamHierarchyData = async (req: AuthenticatedRequest, res: Respo
 export const deleteTeam = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const id = req.params.id as string;
-    
+
     // Check if users belong to this team
     const activeMembers = await prisma.user.count({ where: { teamId: id } });
     if (activeMembers > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Cannot delete this team while members are assigned. Reassign the members first.' 
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot delete this team while members are assigned. Reassign the members first.'
       });
     }
 
     await prisma.team.delete({ where: { id } });
-    
+
     return res.json({ success: true, message: 'Team deleted successfully' });
   } catch (error) {
     console.error('Error deleting team:', error);
