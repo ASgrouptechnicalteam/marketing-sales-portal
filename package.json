@@ -4,8 +4,7 @@
   "description": "Marketing & Sales Portal",
   "private": true,
   "workspaces": [
-    "frontend",
-    "backend"
+    "frontend"
   ],
   "scripts": {
     "start:frontend": "npm run dev --workspace=frontend",
